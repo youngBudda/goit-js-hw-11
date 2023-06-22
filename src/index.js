@@ -8,14 +8,14 @@ const moreBtn = document.querySelector('.load-more');
 
 const API_KEY = '37633155-9cc69d2c24fc24ba983caa040';
 const BASE_URL = 'https://pixabay.com/api/';
-let photoPerPage = 10;
+let photoPerPage = 5;
 let page = 1;
 
 moreBtn.style.display = 'none';
 
 const onSubmit = async e => {
   e.preventDefault();
-
+  page = 1;
   const searchInput = document.querySelector('input[name="searchQuery"]').value;
   try {
     const response = await axios.get(
@@ -25,13 +25,18 @@ const onSubmit = async e => {
     gallery.innerHTML = '';
     const markup = card(response.data);
     gallery.insertAdjacentHTML('afterbegin', markup);
+    moreBtn.style.display = 'block';
 
     if (response.data.totalHits === 0) {
       Notify.failure(
         'Sorry, there are no images matching your search query. Please try again.'
       );
     }
-    moreBtn.style.display = 'block';
+    const pageQuantity = Math.ceil(response.data.totalHits / photoPerPage);
+    if (page === pageQuantity) {
+      moreBtn.style.display = 'none';
+      Notify.info("We're sorry, but you've reached the end of search results.");
+    }
   } catch (error) {
     console.log(error);
   }
@@ -46,9 +51,9 @@ const onMoreBtn = async () => {
     const response = await axios.get(
       `${BASE_URL}?key=${API_KEY}&q=${searchInput}&image_type=photo&orientation=horizontal&safesearch=true&per_page=${photoPerPage}&page=${page}`
     );
-    gallery.innerHTML = '';
+    // gallery.innerHTML = '';
     const markup = card(response.data);
-    gallery.insertAdjacentHTML('afterbegin', markup);
+    gallery.insertAdjacentHTML('beforeend', markup);
 
     if (response.data.totalHits === 0) {
       Notify.failure(
@@ -56,14 +61,6 @@ const onMoreBtn = async () => {
       );
     }
     moreBtn.style.display = 'block';
-
-    const pageQuantity = Math.ceil(response.data.totalHits / photoPerPage);
-    console.log(page);
-    console.log(pageQuantity);
-    if (page === pageQuantity) {
-      moreBtn.style.display = 'none';
-      Notify.info("We're sorry, but you've reached the end of search results.");
-    }
   } catch (error) {
     console.log(error);
   }
